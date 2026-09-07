@@ -75,4 +75,24 @@ repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request
 - 修正後のPR WorkflowでWIF認証、GCS backend初期化、root plan No changesを確認
 - claim確認用の一時デバッグstepは認証成功後に削除
 
-Apply Environmentのsubjectは実token確認後に別途判断する。
+## Apply Environment OIDC subject検証
+
+`terraform-production`をmain限定のまま使用し、通常applyを無効化した一時jobでJWTの`sub`と`aud`だけを確認した。token本体、header、signature、その他claim、Credentialは出力していない。
+
+実`sub`は次の匿名化形式だった。
+
+```text
+repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:environment:terraform-production
+```
+
+TerraformのApply subjectだけをこのexact形式へ変更した。PR subject、attribute condition、audience、Service Account権限は変更せず、wildcardと`principalSet`も使用していない。IAM memberは`create_before_destroy`により新binding作成後に旧bindingを削除した。
+
+- bootstrap apply: Apply bindingのみ`1 added / 0 changed / 1 destroyed`
+- bootstrap apply後plan: No changes
+- root plan: No changes
+- 一時claim debug job: 削除済み
+- 通常apply job: 再有効化済み
+- GitHub Actions: WIF認証、GCS backend初期化、saved plan、applyが成功
+- CI plan: No changes
+- CI apply: `0 added / 0 changed / 0 destroyed`
+- locking: `-lock=false`を使用せず、GCS backendの標準locking経路でplan/apply完了
