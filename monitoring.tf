@@ -125,7 +125,7 @@ resource "google_monitoring_alert_policy" "backend_health" {
     display_name = "Load balancer backend became unhealthy"
 
     condition_threshold {
-      filter                  = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.unhealthy_backend.name}\" AND resource.type=\"gce_instance_group\""
+      filter                  = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.unhealthy_backend.name}\" AND resource.type=\"global\""
       comparison              = "COMPARISON_GT"
       threshold_value         = 0
       duration                = "60s"

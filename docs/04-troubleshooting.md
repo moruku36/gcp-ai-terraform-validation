@@ -80,3 +80,12 @@
 - 安全確認: 修正planは未作成のAlert Policy 2件だけ。既存および部分作成済み5件の変更・削除なし
 - IAM: 権限不足ではなくAPI入力制約。Roleやpermissionの追加なし
 - 区分: AI自律診断・修正
+
+## 2026-09-07: Health Check log-based metricのresource mapping
+
+- 症状: Logging metricは存在したが、Alert filterの`resource.type="gce_instance_group"`がknown descriptorではないとしてHTTP 400
+- 原因: Cloud Loggingの`gce_instance_group`は、log-based metricとしてCloud Monitoringへ取り込まれる際に`global`へmappingされる
+- 確認: Logging APIでmetricの存在、Monitoring APIでmetric descriptorのresource typeが`global`であることをread-only確認
+- 修正: Alert filterだけを`resource.type="global"`へ変更。Logging側filterは対象MIGに限定したまま維持
+- IAM: 追加・変更なし
+- 区分: AI自律診断・修正

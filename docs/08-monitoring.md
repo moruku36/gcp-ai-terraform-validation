@@ -60,4 +60,6 @@ Health Check logは状態遷移時だけ生成され、endpoint削除時には�
 - 部分適用後のState refreshを実施
 - 修正plan: 未作成Alert Policy 2 create、0 change、0 destroy
 
+再applyでHTTP 5xx Alertは作成されたが、Health Check log-based metricのMonitoring resource typeが不一致となった。Cloud Loggingの`gce_instance_group`はMonitoringでは`global`へmappingされるため、Alert filterだけを`global`へ修正した。Logging metric自体のfilterは対象MIGに限定している。
+
 再applyと障害試験結果は実行後に追記する。
