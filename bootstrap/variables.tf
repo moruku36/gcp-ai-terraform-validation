@@ -34,10 +34,22 @@ variable "github_owner" {
   default     = "moruku36"
 }
 
+variable "github_owner_id" {
+  description = "Stable numeric GitHub owner ID used in the repository OIDC subject."
+  type        = string
+  default     = "12478466"
+}
+
 variable "github_repository" {
   description = "Trusted GitHub repository name."
   type        = string
   default     = "gcp-ai-terraform-validation"
+}
+
+variable "github_repository_id" {
+  description = "Stable numeric GitHub repository ID used in the repository OIDC subject."
+  type        = string
+  default     = "1359609296"
 }
 
 variable "github_environment" {

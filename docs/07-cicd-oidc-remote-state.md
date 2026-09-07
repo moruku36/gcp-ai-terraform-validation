@@ -56,3 +56,21 @@ Repository Variable:
 - `GCP_ENVIRONMENT_ACTIVE`
 
 `terraform-production`はmain限定とし、cleanup前に`GCP_ENVIRONMENT_ACTIVE=false`へ変更してcloud jobのskipを確認する。
+
+## PR OIDC subject検証
+
+初回のRemote State接続では、Service Account access token取得時に`iam.serviceAccounts.getAccessToken`が拒否された。JWT本体を出力しない一時stepで`sub`と`aud`だけを確認した結果、`aud`はWIF Providerと一致した一方、`sub`にはGitHub owner/repositoryの安定numeric IDが含まれていた。
+
+TerraformのPR subjectを次の匿名化形式へ変更した。
+
+```text
+repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request
+```
+
+- exact subjectを維持し、wildcardや`principalSet`へ緩和しない
+- Providerのrepository name/owner condition、audience、Apply subjectは変更しない
+- `roles/iam.workloadIdentityUser`以外の権限を追加しない
+- IAM memberは`create_before_destroy`で新binding作成後に旧bindingを削除
+- bootstrap apply後のplanはNo changes
+
+Apply Environmentのsubjectは実token確認後に別途判断する。

@@ -66,6 +66,10 @@ resource "google_service_account_iam_member" "github_pr_federation" {
   service_account_id = google_service_account.github_pr.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/subject/${local.pr_subject}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "google_service_account_iam_member" "github_apply_federation" {

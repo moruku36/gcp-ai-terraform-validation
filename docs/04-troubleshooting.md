@@ -46,3 +46,13 @@
 - 修正: 空の`backend "gcs" {}`だけを含む`backend.tf`を追跡し、Bucket名とprefixは引き続きWorkflowから注入
 - 安全判断: PR Workflowにapplyはなく、Cloud Resource変更は発生していない
 - 区分: AI自律診断・修正。IAM拡張なし
+
+## 2026-09-07: PR OIDC subjectとexact IAM memberが不一致
+
+- 症状: WIF設定後のGCS backend初期化で`iam.serviceAccounts.getAccessToken`が拒否
+- 調査: token本体・header・signatureを出さず、GitHub OIDCの`sub`と`aud`だけを一時出力
+- 原因: 実`sub`はowner/repositoryのstable numeric IDを含む形式で、Terraformのname-only subjectと不一致
+- 修正: PR subjectだけを`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request`へ変更
+- 安全判断: exact subject、attribute condition、audience、Apply subject、既存Roleを維持。権限追加なし
+- 適用: PR IAM member 1件だけをcreate-before-destroyで置換し、bootstrap plan No changesを確認
+- 区分: AI自律診断・修正。人間はbinding置換だけを承認
