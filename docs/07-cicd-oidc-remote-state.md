@@ -72,5 +72,7 @@ repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request
 - `roles/iam.workloadIdentityUser`以外の権限を追加しない
 - IAM memberは`create_before_destroy`で新binding作成後に旧bindingを削除
 - bootstrap apply後のplanはNo changes
+- 修正後のPR WorkflowでWIF認証、GCS backend初期化、root plan No changesを確認
+- claim確認用の一時デバッグstepは認証成功後に削除
 
 Apply Environmentのsubjectは実token確認後に別途判断する。

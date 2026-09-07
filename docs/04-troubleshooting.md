@@ -55,4 +55,6 @@
 - 修正: PR subjectだけを`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request`へ変更
 - 安全判断: exact subject、attribute condition、audience、Apply subject、既存Roleを維持。権限追加なし
 - 適用: PR IAM member 1件だけをcreate-before-destroyで置換し、bootstrap plan No changesを確認
+- 結果: PRのWIF認証とGCS Remote State接続が成功し、root planはNo changes
+- 後処理: `sub` / `aud`限定の一時デバッグstepを削除
 - 区分: AI自律診断・修正。人間はbinding置換だけを承認
