@@ -69,3 +69,25 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "monitoring_cpu_threshold" {
+  description = "CPU utilization ratio that opens the backend VM alert after five minutes."
+  type        = number
+  default     = 0.8
+
+  validation {
+    condition     = var.monitoring_cpu_threshold > 0 && var.monitoring_cpu_threshold <= 1
+    error_message = "monitoring_cpu_threshold must be greater than 0 and at most 1."
+  }
+}
+
+variable "monitoring_http_5xx_threshold" {
+  description = "Number of HTTP 5xx responses in five minutes that opens the load balancer alert."
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.monitoring_http_5xx_threshold >= 1
+    error_message = "monitoring_http_5xx_threshold must be at least 1."
+  }
+}
