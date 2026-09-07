@@ -41,3 +41,14 @@
 | No changes確認 | 3件（root apply後、bootstrap apply後、State移行後） |
 
 ADC未設定は既存gcloudログインの短時間tokenでplan/applyを実施した。tokenは環境変数だけで利用し、ログ・ファイル・GitHubへ保存していない。GitHub Actions実動作以降の集計は完了後に更新する。
+
+## GitHub OIDC / Apply workflow結果
+
+- PR用・Apply用ともstable GitHub owner/repository IDを含むexact subjectでWIF認証成功
+- Applyはmain限定の`terraform-production` Environmentから実行
+- 長期Credential、Service Account Key、権限追加なし
+- GCS Remote State初期化成功
+- root planはNo changes
+- saved planのapplyは`0 added / 0 changed / 0 destroyed`
+- GCS backendは標準lockingを有効にしたまま完了
+- 一時OIDC claim確認jobは削除済み

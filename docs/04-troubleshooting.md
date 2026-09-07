@@ -58,3 +58,14 @@
 - 結果: PRのWIF認証とGCS Remote State接続が成功し、root planはNo changes
 - 後処理: `sub` / `aud`限定の一時デバッグstepを削除
 - 区分: AI自律診断・修正。人間はbinding置換だけを承認
+
+## 2026-09-07: Apply Environment OIDC subjectとexact IAM memberが不一致
+
+- 症状: Apply用Terraform subjectがrepository nameだけを含み、GitHubのEnvironment tokenと一致しなかった
+- 調査: 通常applyを停止した一時jobで`sub`と`aud`だけを確認。tokenやCredentialは非表示
+- 原因: Environment tokenの`sub`にもowner/repositoryのstable numeric IDが含まれる
+- 修正: Apply subjectだけを`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:environment:terraform-production`へ変更
+- 安全判断: exact制約、attribute condition、audience、PR binding、Service Account権限を維持
+- 適用: Apply IAM member 1件をcreate-before-destroyで置換
+- 結果: bootstrap/root plan No changes。mainのWIF認証、GCS backend、No changes plan、0件applyが成功
+- 区分: AIが調査・修正・検証を実施。人間はbinding置換を承認
