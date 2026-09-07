@@ -45,6 +45,22 @@ jobs:
       TF_VAR_apply_service_account_email: ${{ secrets.GCP_APPLY_SERVICE_ACCOUNT }}
     steps:
       - uses: actions/checkout@v4
+      - name: Debug OIDC subject and audience only
+        shell: bash
+        run: |
+          response="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://iam.googleapis.com/${{ secrets.GCP_WIF_PROVIDER }}")"
+          jwt="$(jq -r '.value' <<<"${response}")"
+          payload="$(cut -d. -f2 <<<"${jwt}")"
+          payload="${payload//-/+}"
+          payload="${payload//_/\/}"
+          case $((${#payload} % 4)) in
+            2) payload="${payload}==" ;;
+            3) payload="${payload}=" ;;
+          esac
+          claims="$(printf '%s' "${payload}" | base64 --decode)"
+          jq -r '"sub=" + .sub, "aud=" + (if (.aud | type) == "array" then (.aud | join(",")) else .aud end)' <<<"${claims}"
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
