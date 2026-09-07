@@ -20,5 +20,21 @@
 
 - 症状: ADC access tokenを取得できない
 - 原因: gcloud CLIのユーザーログインとTerraformが利用するADCは別管理
-- 対応: Credential操作に該当するため、`gcloud auth application-default login`実行前に停止
-- 状態: 未解決。plan/apply未実行
+- 対応: ADCファイルを新規保存せず、既存gcloudログインから発行した短時間tokenをplanプロセスだけへ渡した
+- 結果: root / bootstrapのread-only plan成功。通常のローカル運用向けADCは未設定のまま
+
+## 2026-09-07: bootstrap planの引数解析エラー
+
+- 症状: `Too many command line arguments`が2回発生
+- 原因: PowerShellからTerraformへ直接並べた引数の解釈がbootstrap実行時に崩れた
+- 修正: 引数を配列化してsplatでTerraformへ渡した
+- 結果: Terraform設定の評価まで到達
+- 区分: AI自律診断・修正。クラウド変更なし
+
+## 2026-09-07: custom role permissionsのset/list型不一致
+
+- 症状: `Invalid value for "seqs" parameter: all arguments must be lists or tuples`
+- 原因: Provider schema上set型の`permissions`を`concat`へ直接渡した
+- 修正: `tolist()`で型だけを明示。Permission内容とscopeは変更なし
+- 結果: bootstrap validateとplan成功
+- 区分: AI自律診断・修正。IAM追加・クラウド変更なし

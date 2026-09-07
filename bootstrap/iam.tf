@@ -53,7 +53,7 @@ resource "google_project_iam_custom_role" "terraform_apply" {
   description = "CRUD permissions limited to the resource families managed by the validation root module."
   stage       = "GA"
 
-  permissions = distinct(concat(google_project_iam_custom_role.terraform_pr.permissions, [
+  permissions = distinct(concat(tolist(google_project_iam_custom_role.terraform_pr.permissions), [
     "compute.backendServices.create",
     "compute.backendServices.delete",
     "compute.backendServices.update",

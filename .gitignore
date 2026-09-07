@@ -9,6 +9,7 @@ backend.tf
 *.auto.tfvars
 crash.log
 crash.*.log
+*.log
 *.pem
 *.key
 *.json

@@ -24,14 +24,14 @@ AWS編・Azure編の単純なサービス名置換ではなく、Regional Manage
 - [x] ローカル環境、認証状態、選択中Project、Region/Zone、既存リソース境界を匿名化して確認
 - [x] root / bootstrap Terraform初期実装
 - [x] `terraform fmt`、`terraform init -backend=false`、`terraform validate`
-- [ ] Application Default Credentialsによるread-only plan
+- [x] 既存gcloudログインの短時間tokenによるread-only plan（root 17 create、bootstrap 13 create、destroy / replaceなし）
 - [ ] Web基盤applyとHTTP 200
 - [ ] GCS Remote State移行とlocking試験
 - [ ] GitHub Actions / WIF実動作
 - [ ] Monitoringと障害試験
 - [ ] cleanupと残存0確認
 
-> 2026-09-07時点ではGoogle Cloudへの変更は行っていません。実Project ID、Project Number、Service Account email、Credential、Public IPはGitへ保存しません。
+> 2026-09-07時点ではGoogle Cloudへの変更は行っていません。実Project ID、Project Number、Service Account email、Credential、Public IPはGitへ保存しません。STS API有効化とbootstrap/root applyは人間承認待ちです。
 
 ## ローカル検証
 
