@@ -41,7 +41,7 @@ AWS編・Azure編の単純なサービス名置換ではなく、Regional Manage
 - Remote State: versioning / Public Access Prevention付きGCSとbackend標準lockingを検証
 - Monitoring: Uptime Check 1、Alert Policy 5、log-based metric 1
 - 障害試験: MIGを2台から1台へ縮小してもHTTP 200を維持し、AlertのFired / Resolvedを確認
-- cleanup: root 25件、bootstrap 13件をdelete-only planで削除。管理対象はactive 0、既存default networkと既存Service Accountは保護
+- cleanup: root 25件、bootstrap 13件をdelete-only planで削除。管理対象はactive 0、既存default networkと既存Service Accountは保護。GitHub cloud jobも無効化
 
 ## AWS / Azureとの要点
 

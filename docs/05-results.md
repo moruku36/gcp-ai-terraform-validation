@@ -75,3 +75,4 @@ ADC未設定は既存gcloudログインの短時間tokenでplan/applyを実施�
 - 保護対象: 既存default network 1件、既存Service Account 2件を残存確認
 - Project削除、Billing変更、IAM拡張、Service Account Key作成は未実施
 - Remote State Bucket削除前にroot State 0を確認したため、削除後にroot planを再実行しない正しい順序を維持
+- GitHub: `GCP_ENVIRONMENT_ACTIVE=false`へ変更後、PR static checks成功、cloud planは認証前にSkipped
