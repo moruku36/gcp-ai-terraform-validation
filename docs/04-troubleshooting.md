@@ -38,3 +38,11 @@
 - 修正: `tolist()`で型だけを明示。Permission内容とscopeは変更なし
 - 結果: bootstrap validateとplan成功
 - 区分: AI自律診断・修正。IAM追加・クラウド変更なし
+
+## 2026-09-07: CI planが既存18リソースを新規作成扱いにした
+
+- 症状: WIF認証と`terraform init`は成功したが、PR planが`18 to add`を表示
+- 原因: 実Bucket名を含まない`backend.tf`まで`.gitignore`対象となり、CI checkout後にGCS backend宣言が存在しなかった
+- 修正: 空の`backend "gcs" {}`だけを含む`backend.tf`を追跡し、Bucket名とprefixは引き続きWorkflowから注入
+- 安全判断: PR Workflowにapplyはなく、Cloud Resource変更は発生していない
+- 区分: AI自律診断・修正。IAM拡張なし
