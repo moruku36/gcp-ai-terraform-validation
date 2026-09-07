@@ -1,5 +1,7 @@
 name: Terraform PR
 
+# Cloud plan runs only for trusted same-repository pull requests.
+
 on:
   pull_request:
     paths:
@@ -67,4 +69,3 @@ jobs:
             sed -e "s/${TF_VAR_project_id}/<PROJECT_ID>/g" plan.log | tail -80
             exit "$status"
           fi
-

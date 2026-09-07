@@ -32,9 +32,18 @@ GitHub OIDC token
 
 移行時はLocal Stateをignored directoryへ保存し、移行元とbackupのSHA-256一致後に`terraform init -migrate-state`を実行する。移行前後のState resource数、lineage、serial、plan結果を秘密値を出さず確認する。
 
-## GitHub設定予定
+## 移行結果
 
-Repository / Environment Secrets候補:
+- Local Stateをignored directoryへコピーし、移行元とbackupのSHA-256一致を確認
+- `terraform init -migrate-state -force-copy`で`terraform/root` prefixへ移行
+- GCS上のState object、lineage一致、State内17リソースを確認
+- 移行に伴いState serialは1増加したが、既存Resourceの差分はなし
+- 通常のlockingを有効にしたplanが成功し、終了後に孤立lockがないことを確認
+- 移行後のroot planはNo changes
+
+## GitHub設定
+
+Repository / Environment Secrets:
 
 - `GCP_PROJECT_ID`
 - `GCP_WIF_PROVIDER`
