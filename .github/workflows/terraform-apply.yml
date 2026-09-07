@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   apply:
+    # Cleanup safety gate: enable only after bootstrap and State restoration.
     if: vars.GCP_ENVIRONMENT_ACTIVE == 'true'
     runs-on: ubuntu-latest
     environment: terraform-production
