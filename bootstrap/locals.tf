@@ -4,7 +4,7 @@ locals {
 
   repository    = "${var.github_owner}/${var.github_repository}"
   pr_subject    = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repository}@${var.github_repository_id}:pull_request"
-  apply_subject = "repo:${local.repository}:environment:${var.github_environment}"
+  apply_subject = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repository}@${var.github_repository_id}:environment:${var.github_environment}"
 
   common_labels = merge({
     environment = var.environment
