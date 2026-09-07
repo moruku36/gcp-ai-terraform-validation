@@ -17,8 +17,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  oidc-claim-debug:
+    if: github.event_name == 'push' && vars.GCP_ENVIRONMENT_ACTIVE == 'true'
+    runs-on: ubuntu-latest
+    environment: terraform-production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Debug OIDC subject and audience only
+        shell: bash
+        run: |
+          response="$(curl --fail --silent --show-error \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://iam.googleapis.com/${{ secrets.GCP_WIF_PROVIDER }}")"
+          jwt="$(jq -r '.value' <<<"${response}")"
+          payload="$(cut -d. -f2 <<<"${jwt}")"
+          payload="${payload//-/+}"
+          payload="${payload//_/\/}"
+          case $((${#payload} % 4)) in
+            2) payload="${payload}==" ;;
+            3) payload="${payload}=" ;;
+          esac
+          claims="$(printf '%s' "${payload}" | base64 --decode)"
+          jq -r '"sub=" + .sub, "aud=" + (if (.aud | type) == "array" then (.aud | join(",")) else .aud end)' <<<"${claims}"
+
   apply:
-    if: vars.GCP_ENVIRONMENT_ACTIVE == 'true'
+    # Temporarily disabled while the protected Environment OIDC subject is inspected.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     environment: terraform-production
     permissions:

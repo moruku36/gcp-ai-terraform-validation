@@ -38,3 +38,23 @@
 - 修正: `tolist()`で型だけを明示。Permission内容とscopeは変更なし
 - 結果: bootstrap validateとplan成功
 - 区分: AI自律診断・修正。IAM追加・クラウド変更なし
+
+## 2026-09-07: CI planが既存18リソースを新規作成扱いにした
+
+- 症状: WIF認証と`terraform init`は成功したが、PR planが`18 to add`を表示
+- 原因: 実Bucket名を含まない`backend.tf`まで`.gitignore`対象となり、CI checkout後にGCS backend宣言が存在しなかった
+- 修正: 空の`backend "gcs" {}`だけを含む`backend.tf`を追跡し、Bucket名とprefixは引き続きWorkflowから注入
+- 安全判断: PR Workflowにapplyはなく、Cloud Resource変更は発生していない
+- 区分: AI自律診断・修正。IAM拡張なし
+
+## 2026-09-07: PR OIDC subjectとexact IAM memberが不一致
+
+- 症状: WIF設定後のGCS backend初期化で`iam.serviceAccounts.getAccessToken`が拒否
+- 調査: token本体・header・signatureを出さず、GitHub OIDCの`sub`と`aud`だけを一時出力
+- 原因: 実`sub`はowner/repositoryのstable numeric IDを含む形式で、Terraformのname-only subjectと不一致
+- 修正: PR subjectだけを`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request`へ変更
+- 安全判断: exact subject、attribute condition、audience、Apply subject、既存Roleを維持。権限追加なし
+- 適用: PR IAM member 1件だけをcreate-before-destroyで置換し、bootstrap plan No changesを確認
+- 結果: PRのWIF認証とGCS Remote State接続が成功し、root planはNo changes
+- 後処理: `sub` / `aud`限定の一時デバッグstepを削除
+- 区分: AI自律診断・修正。人間はbinding置換だけを承認

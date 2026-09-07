@@ -13,7 +13,7 @@ AWS編・Azure編の単純なサービス名置換ではなく、Regional Manage
 - Frontend: Global External Application Load Balancer、HTTP 80のみ
 - Backend: Ubuntu 24.04、Nginx、External IPなし、Internet SSHなし
 - Egress: TCP 80/443だけをCloud NAT経由で許可
-- State: 初期Local State、検証後に専用GCS Bucketへ移行予定
+- State: 専用GCS Bucketへ移行済み（Versioning / Public Access Prevention / native locking）
 - CI/CD: GitHub OIDC + Workload Identity Federation、PR/Apply Identity分離
 - Monitoring: Cloud Monitoring、Cloud Logging、Uptime Checkを必要最小限で追加予定
 
@@ -25,13 +25,13 @@ AWS編・Azure編の単純なサービス名置換ではなく、Regional Manage
 - [x] root / bootstrap Terraform初期実装
 - [x] `terraform fmt`、`terraform init -backend=false`、`terraform validate`
 - [x] 既存gcloudログインの短時間tokenによるread-only plan（root 17 create、bootstrap 13 create、destroy / replaceなし）
-- [ ] Web基盤applyとHTTP 200
-- [ ] GCS Remote State移行とlocking試験
+- [x] Web基盤apply（17 added / 0 changed / 0 destroyed）とHTTP 200
+- [x] GCS Remote State移行、lineage・17リソース一致、locking有効、移行後No changes
 - [ ] GitHub Actions / WIF実動作
 - [ ] Monitoringと障害試験
 - [ ] cleanupと残存0確認
 
-> 2026-09-07時点ではGoogle Cloudへの変更は行っていません。実Project ID、Project Number、Service Account email、Credential、Public IPはGitへ保存しません。STS API有効化とbootstrap/root applyは人間承認待ちです。
+> 2026-09-07時点でWeb基盤とState/WIF bootstrapを作成済みです。実Project ID、Project Number、Service Account email、Credential、Public IP、State Bucket実名はGitへ保存しません。
 
 ## ローカル検証
 

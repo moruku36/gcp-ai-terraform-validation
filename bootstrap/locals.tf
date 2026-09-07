@@ -3,7 +3,7 @@ locals {
   role_id_prefix = replace(local.resource_name, "-", "_")
 
   repository    = "${var.github_owner}/${var.github_repository}"
-  pr_subject    = "repo:${local.repository}:pull_request"
+  pr_subject    = "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repository}@${var.github_repository_id}:pull_request"
   apply_subject = "repo:${local.repository}:environment:${var.github_environment}"
 
   common_labels = merge({
