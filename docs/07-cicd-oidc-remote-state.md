@@ -1,13 +1,41 @@
 # CI/CD・Workload Identity Federation・Remote State
 
-## 認証設計
+## 認証設計とCI/CDフロー
 
-```text
-GitHub OIDC token
-  -> Workload Identity Pool Provider
-  -> exact GitHub subject
-  -> PR用またはApply用Service Account
-  -> GCP API / GCS State
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant GH as GitHub Actions Runner
+    participant OIDC as GitHub OIDC Token Service
+    participant WIF as Workload Identity Pool / Provider
+    participant SA as Service Account (PR / Apply)
+    participant GCS as GCS Remote State Bucket
+    participant GCP as Google Cloud Resource APIs
+
+    Note over Dev,GH: PR 作成時 (terraform-pr.yml)
+    Dev->>GH: Pull Request オープン
+    GH->>OIDC: ID Token 要求 (id-token: write)
+    OIDC-->>GH: 短期 JWT (sub: repo:owner@id/repo@id:pull_request)
+    GH->>WIF: STS 認証リクエスト (JWT 交換)
+    WIF->>WIF: attribute mapping & exact subject 検証
+    WIF->>SA: PR用 Service Account へ Impersonate (roles/iam.workloadIdentityUser)
+    SA-->>GH: 短期 GCP OAuth2 Access Token (Viewer 権限)
+    GH->>GCS: -lock=false で State 読取 (roles/storage.objectViewer)
+    GH->>GCP: Read-only API 呼出 (terraform plan)
+    GH-->>Dev: PRコメントに差分表示
+
+    Note over Dev,GH: main マージ時 (terraform-apply.yml)
+    Dev->>GH: main ブランチへマージ (Environment: terraform-production)
+    GH->>OIDC: ID Token 要求
+    OIDC-->>GH: 短期 JWT (sub: ...:environment:terraform-production)
+    GH->>WIF: STS 認証リクエスト
+    WIF->>SA: Apply用 Service Account へ Impersonate (CRUD 権限)
+    SA-->>GH: 短期 GCP OAuth2 Access Token
+    GH->>GCS: GCS ネイティブ排他ロック取得
+    GH->>GCP: terraform apply (リソース作成・更新)
+    GH->>GCS: 更新後 tfstate 保存 & ロック解放
+    GH-->>Dev: Apply 完了通知
 ```
 
 - Issuerは`https://token.actions.githubusercontent.com`のみ

@@ -4,6 +4,47 @@
 
 ネイティブメトリクス、外形監視、Health Check状態遷移ログだけを使う。Ops Agent、Log Analytics、BigQuery export、専用Log bucket、Dashboardは追加しない。
 
+```mermaid
+flowchart LR
+    subgraph Sources["監視データソース"]
+        LB["Global External ALB"]
+        MIG["Regional MIG (Fixed 2 VMs)"]
+        Uptime["Google Uptime Checkers (分散PoP)"]
+    end
+
+    subgraph Signals["メトリクス & ログシグナル"]
+        M1["uptime_url/check_passed"]
+        M2["instance_group/size"]
+        M3["logging.googleapis.com/user/health_check_anomaly<br/>(Log-based Metric)"]
+        M4["instance/cpu/utilization"]
+        M5["https/request_count (5xx)"]
+    end
+
+    subgraph Policies["Cloud Monitoring Alert Policies (計5件)"]
+        P1["Web停止アラーム (check_passed失敗 >=2地点)"]
+        P2["Backend容量低下アラーム (size < 2)"]
+        P3["Health Check異常アラーム (UNHEALTHY/TIMEOUT >=1)"]
+        P4["CPU高負荷アラーム (utilization > 80%)"]
+        P5["HTTP 5xx急増アラーム (count >= 5 / 5分)"]
+    end
+
+    subgraph Logging["Cloud Logging"]
+        LogBucket["_Default Log Bucket<br/>(LB Access Logs & Health Transitions)"]
+    end
+
+    Uptime --> M1
+    MIG --> M2 & M4
+    LB -.->|"アクセスログ & ヘルスログ"| LogBucket
+    LogBucket -.->|"Log-based Metric"| M3
+    LB --> M5
+
+    M1 --> P1
+    M2 --> P2
+    M3 --> P3
+    M4 --> P4
+    M5 --> P5
+```
+
 | 要件 | データ源 | Alert条件 |
 |---|---|---|
 | Web停止 | Uptime Check `check_passed` | 2地点以上の失敗が2分継続 |
@@ -71,6 +112,42 @@ Health Check logは状態遷移時だけ生成され、endpoint削除時には�
 - IAM / WIF /既存Web resourceの変更: なし
 
 ## 障害試験
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Tester as 検証者 (AI/Human)
+    participant ALB as Global External ALB
+    participant MIG as Regional MIG (Tokyo)
+    participant VM1 as VM Web #1 (Zone A)
+    participant VM2 as VM Web #2 (Zone C)
+    participant CM as Cloud Monitoring (Alert Policies)
+    actor Client as 外部クライアント (curl)
+
+    Note over VM1,VM2: 正常運用フェーズ (MIG Size = 2)
+    Client->>ALB: HTTP GET /
+    ALB->>VM1: トラフィック分散
+    ALB-->>Client: HTTP 200 OK (2 Healthy Backends)
+
+    Note over Tester,MIG: 障害注入 (MIG Target Size を 2 -> 1 に縮小)
+    Tester->>MIG: gcloud compute instance-groups managed resize --size=1
+    MIG-->>VM2: インスタンス停止・削除処理
+    MIG-.->|メトリクス送信: instance_group/size = 1| CM
+    CM-->>CM: 2分継続後 Backend Capacity Alert 発報 (Incident OPEN / Fired)
+
+    Note over Client,ALB: サービス無停止確認
+    Client->>ALB: HTTP GET /
+    ALB->>VM1: 稼働中の Zone A VM1 にトラフィック集約
+    ALB-->>Client: HTTP 200 OK (無停止継続)
+
+    Note over Tester,MIG: 復旧フェーズ (MIG Target Size を 1 -> 2 に復帰)
+    Tester->>MIG: gcloud compute instance-groups managed resize --size=2
+    MIG-->>VM2: 新規VMプロビジョニング & Nginx起動
+    MIG->>VM2: Health Check (auto-healing verification)
+    VM2-->>MIG: HTTP 200 OK (RUNNING / HEALTHY)
+    MIG-.->|メトリクス送信: instance_group/size = 2| CM
+    CM-->>CM: Incident 自動クローズ (Resolved)
+```
 
 Regional MIGのtarget sizeを一時的に2台から1台へ縮小し、既存Terraform定義は変更せずに容量低下を発生させた。
 
