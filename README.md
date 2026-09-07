@@ -8,6 +8,10 @@ AWS編・Azure編の単純なサービス名置換ではなく、Regional Manage
 
 ## アーキテクチャ
 
+![GCP AI Infrastructure Validationの構成図](docs/images/gcp-architecture.png)
+
+Internet公開点をGlobal External Application Load Balancerへ集約し、東京リージョンのRegional MIGにあるPrivate VM 2台へHTTPを転送します。VMのpackage取得はCloud NATへ限定し、Cloud Monitoring / Loggingで可用性、Backend、CPU、HTTP 5xxを監視します。GitHub ActionsはWorkload Identity Federationで短期認証し、Terraform Stateはversioningとlockingを有効にしたGCSで共有する構成です。
+
 - Region: Tokyo (`asia-northeast1`)
 - Compute: 2 Zoneへ均等配置するRegional Managed Instance Group、固定2台
 - Frontend: Global External Application Load Balancer、HTTP 80のみ
