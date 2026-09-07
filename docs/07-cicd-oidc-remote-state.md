@@ -110,7 +110,7 @@ State Bucket削除後はroot backendへ接続できないため、root State 0�
 
 cleanup後の誤再作成防止にはworkflow既存条件`vars.GCP_ENVIRONMENT_ACTIVE == 'true'`を使用する。GitHub側で今後不要となる削除候補は次のとおり。今回は値の削除は行わない。
 
-cleanup後にRepository Variableを`false`へ変更した。PR workflowではstatic checksが成功し、cloud plan jobがOIDC認証・GCS初期化前にSkippedとなることを確認した。main側も同じgateを使用する。
+cleanup後にRepository Variableを`false`へ変更した。PR workflowではstatic checksが成功し、cloud plan jobがOIDC認証・GCS初期化前にSkippedとなった。merge後のmain Apply workflowもjob全体がSkippedとなり、削除済みWIF/GCSへの接続や再作成planへ進まないことを確認した。
 
 - Repository / Environment Secrets: `GCP_PROJECT_ID`、`GCP_WIF_PROVIDER`、`GCP_PR_SERVICE_ACCOUNT`、`GCP_APPLY_SERVICE_ACCOUNT`、`GCP_TF_STATE_BUCKET`
 - Repository Variable: `GCP_ENVIRONMENT_ACTIVE`
