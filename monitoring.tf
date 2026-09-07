@@ -128,7 +128,7 @@ resource "google_monitoring_alert_policy" "backend_health" {
       filter                  = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.unhealthy_backend.name}\" AND resource.type=\"gce_instance_group\""
       comparison              = "COMPARISON_GT"
       threshold_value         = 0
-      duration                = "0s"
+      duration                = "60s"
       evaluation_missing_data = "EVALUATION_MISSING_DATA_INACTIVE"
 
       aggregations {
@@ -191,8 +191,8 @@ resource "google_monitoring_alert_policy" "http_5xx" {
 
     condition_threshold {
       filter          = "metric.type=\"loadbalancing.googleapis.com/https/request_count\" AND resource.type=\"https_lb_rule\" AND resource.label.\"url_map_name\"=\"${google_compute_url_map.web.name}\" AND metric.label.\"response_code_class\"=\"500\""
-      comparison      = "COMPARISON_GE"
-      threshold_value = var.monitoring_http_5xx_threshold
+      comparison      = "COMPARISON_GT"
+      threshold_value = var.monitoring_http_5xx_threshold - 1
       duration        = "0s"
 
       aggregations {

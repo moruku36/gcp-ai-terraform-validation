@@ -69,3 +69,14 @@
 - 適用: Apply IAM member 1件をcreate-before-destroyで置換
 - 結果: bootstrap/root plan No changes。mainのWIF認証、GCS backend、No changes plan、0件applyが成功
 - 区分: AIが調査・修正・検証を実施。人間はbinding置換を承認
+
+## 2026-09-07: Monitoring Alert PolicyのAPI検証エラー
+
+- 症状: main applyで7リソース中5件作成後、Backend HealthとHTTP 5xxのAlert Policy作成がHTTP 400で失敗
+- 原因1: `evaluation_missing_data`を設定したconditionにduration 0秒を指定していた
+- 原因2: metric-threshold conditionで未対応の`COMPARISON_GE`を指定していた
+- 修正1: Backend Healthのdurationを60秒へ変更
+- 修正2: 「5件以上」を`COMPARISON_GT`かつthreshold 4として等価表現
+- 安全確認: 修正planは未作成のAlert Policy 2件だけ。既存および部分作成済み5件の変更・削除なし
+- IAM: 権限不足ではなくAPI入力制約。Roleやpermissionの追加なし
+- 区分: AI自律診断・修正
