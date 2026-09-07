@@ -8,7 +8,7 @@
 |---|---|---|
 | Web停止 | Uptime Check `check_passed` | 2地点以上の失敗が2分継続 |
 | Backend / VM capacity異常 | `compute.googleapis.com/instance_group/size` | Regional MIGが2台未満で2分継続 |
-| Health Check異常 | Health Check状態遷移log-based metric | `UNHEALTHY`または`TIMEOUT`が1件以上 |
+| Health Check異常 | Health Check状態遷移log-based metric | `UNHEALTHY`または`TIMEOUT`が1件以上で1分継続 |
 | CPU高負荷 | `compute.googleapis.com/instance/cpu/utilization` | 5分平均が80%超で5分継続 |
 | HTTP 5xx増加 | `loadbalancing.googleapis.com/https/request_count` | 5分間に5件以上 |
 
@@ -51,4 +51,13 @@ Health Check logは状態遷移時だけ生成され、endpoint削除時には�
 - root plan: 7 create、0 change、0 destroy
 - 既存Web、Network、Identity、State resourceの更新・置換: なし
 
-GitHub Actionsと障害試験結果は実行後に追記する。
+## 初回applyと修正
+
+初回main applyは7件中5件を作成後、Monitoring APIのcondition制約により2件で停止した。IAM不足ではなかったため権限追加は行っていない。
+
+- `evaluation_missing_data`を使うconditionのdurationを0秒から60秒へ修正
+- 未対応の`COMPARISON_GE`を、同義の`COMPARISON_GT`とthreshold 4へ修正
+- 部分適用後のState refreshを実施
+- 修正plan: 未作成Alert Policy 2 create、0 change、0 destroy
+
+再applyと障害試験結果は実行後に追記する。
