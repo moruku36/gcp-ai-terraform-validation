@@ -62,4 +62,32 @@ Health Check logは状態遷移時だけ生成され、endpoint削除時には�
 
 再applyでHTTP 5xx Alertは作成されたが、Health Check log-based metricのMonitoring resource typeが不一致となった。Cloud Loggingの`gce_instance_group`はMonitoringでは`global`へmappingされるため、Alert filterだけを`global`へ修正した。Logging metric自体のfilterは対象MIGに限定している。
 
-再applyと障害試験結果は実行後に追記する。
+3回目のmain applyで未作成だったHealth Check Alertを追加した。最終結果は次のとおり。
+
+- GitHub Actions: GCS backend初期化、WIF認証、saved plan applyに成功
+- 最終apply: 1 added、0 changed、0 destroyed
+- Monitoring構成: Uptime Check 1、Alert Policy 5、log-based metric 1
+- 最終root plan: No changes
+- IAM / WIF /既存Web resourceの変更: なし
+
+## 障害試験
+
+Regional MIGのtarget sizeを一時的に2台から1台へ縮小し、既存Terraform定義は変更せずに容量低下を発生させた。
+
+| 確認項目 | 結果 |
+|---|---|
+| Backend状態 | 2台から1台へ低下し、残存BackendはHealthy |
+| HTTP | 試験中も200を継続 |
+| Monitoring metric | `instance_group/size`が2から1へ変化 |
+| Alert | `backend capacity below target`がOpen（Fired） |
+| 復旧 | target sizeを2へ戻し、2台ともRUNNING / HEALTHY、MIG Stable |
+| Resolved | sizeが2へ戻った後、IncidentがClosed |
+| Terraform整合性 | 復旧後planはNo changes |
+
+縮小処理とMonitoring収集・Incident評価には数分の遅延があった。復旧中の新VMは一時的にHealth Check `TIMEOUT`となったが、autohealing/verification後にHealthyへ遷移し、サービス停止は発生しなかった。Health Check Alert自体のFiredは今回の短時間試験では確認していない。
+
+## 作業区分
+
+- 人間: Monitoring実装・安全な障害試験の実行承認
+- AI: 設計、Terraform実装、plan安全確認、PR作成・merge、applyログ診断、API制約修正、障害注入・復旧、Fired/Resolved確認
+- 権限: Monitoring作業でIAM追加なし

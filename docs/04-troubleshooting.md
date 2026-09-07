@@ -89,3 +89,12 @@
 - 修正: Alert filterだけを`resource.type="global"`へ変更。Logging側filterは対象MIGに限定したまま維持
 - IAM: 追加・変更なし
 - 区分: AI自律診断・修正
+
+## 2026-09-07: 障害試験の検知遅延
+
+- 症状: MIGのtarget sizeを1へ変更しても、直後の`instance_group/size`は2のままでIncidentも表示されなかった
+- 原因: MIGの縮退完了、managed metricの収集、120秒のcondition評価がそれぞれ非同期
+- 切り分け: Compute APIのtarget size、managed instance数、Monitoring時系列、Alert Policy validityを個別に確認
+- 結果: 時系列が1を継続した後にIncidentがOpenとなり、2台復旧後にClosedへ遷移
+- 修正: Terraform変更なし。観測上限を設け、サービスをHTTP 200で監視しながら待機
+- 区分: AI自律診断・復旧

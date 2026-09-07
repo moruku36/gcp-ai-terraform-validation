@@ -30,15 +30,15 @@
 | root safe plan成功まで | 1回 |
 | bootstrap safe plan成功まで | 4回（CLI解析失敗2、設定型エラー1、成功1） |
 | apply成功まで | root 1回、bootstrap 1回 |
-| 発生した異なるエラー原因 | 5件（ローカル実行境界、`-chdir`、CLI引数解析、Terraform型、PowerShellからのCloud SDK起動） |
+| 発生した異なるエラー原因 | 8件（既存5件＋Monitoring API condition制約2件＋log-based metric resource mapping 1件） |
 | 失敗したコマンド実行 | 追加集計中（同一CLI引数解析の再発を含む） |
-| AI自律修正 | 4件 |
+| AI自律修正 | 7件（Monitoring関連3件を含む） |
 | 人間介入 | 1件（Google Cloudへの書込み承認） |
 | IAM承認 | 1件（既存Owner Identityによるbootstrap実行の承認。恒久Credentialは作成せず） |
-| GitHub Actions失敗 | 0件 |
+| GitHub Actions失敗 | 3 attempt（Monitoring apply。IAM拡張なしで原因修正） |
 | 意図しないTerraform drift | 0件 |
 | destroy/recreate回避 | 0件 |
-| No changes確認 | 3件（root apply後、bootstrap apply後、State移行後） |
+| No changes確認 | 5件以上（記録から確認できる範囲。Monitoring復旧後を含む） |
 
 ADC未設定は既存gcloudログインの短時間tokenでplan/applyを実施した。tokenは環境変数だけで利用し、ログ・ファイル・GitHubへ保存していない。GitHub Actions実動作以降の集計は完了後に更新する。
 
@@ -52,3 +52,14 @@ ADC未設定は既存gcloudログインの短時間tokenでplan/applyを実施�
 - saved planのapplyは`0 added / 0 changed / 0 destroyed`
 - GCS backendは標準lockingを有効にしたまま完了
 - 一時OIDC claim確認jobは削除済み
+
+## Monitoring結果
+
+- Uptime Check 1、Alert Policy 5、Health Check log-based metric 1をTerraform管理
+- 既存Load Balancer access logとHealth Check logを標準Cloud Loggingへ保存
+- PR planは既存Web resourceの変更・置換なし
+- main applyはAPI入力制約を2段階で修正後に成功。最終追加は1件のみ
+- 障害試験ではMIGを2台から1台へ一時縮小してもHTTP 200を継続
+- 容量低下metric、Incident Open（Fired）、2台Healthy復旧、Incident Closedを確認
+- 復旧後のroot planはNo changes
+- MonitoringのためのIAM追加、長期Credential、Service Account Keyはなし
