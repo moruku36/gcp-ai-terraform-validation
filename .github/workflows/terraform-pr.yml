@@ -30,6 +30,7 @@ jobs:
       - run: terraform validate
 
   cloud-plan:
+    # Keep false after cleanup; re-enable only after bootstrap and State restoration.
     if: >-
       vars.GCP_ENVIRONMENT_ACTIVE == 'true' &&
       github.event_name == 'pull_request' &&

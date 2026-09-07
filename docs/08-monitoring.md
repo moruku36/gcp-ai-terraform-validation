@@ -91,3 +91,11 @@ Regional MIGのtarget sizeを一時的に2台から1台へ縮小し、既存Terr
 - 人間: Monitoring実装・安全な障害試験の実行承認
 - AI: 設計、Terraform実装、plan安全確認、PR作成・merge、applyログ診断、API制約修正、障害注入・復旧、Fired/Resolved確認
 - 権限: Monitoring作業でIAM追加なし
+
+## Cleanup
+
+- cleanup前: Uptime Check 1、Alert Policy 5、log-based metric 1をState/APIで確認
+- root destroy plan: Monitoringを含む25件すべてdelete-only
+- destroy後: Alert Policy、Uptime Check、対象log-based metricはactive 0
+- 標準Cloud LoggingのProject既定bucket自体は既存managed serviceであり削除対象外
+- Monitoringのために追加したIAM権限はないため、個別IAM cleanupは不要

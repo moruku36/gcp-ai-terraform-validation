@@ -12,8 +12,8 @@ GitHub OIDC token
 
 - Issuerは`https://token.actions.githubusercontent.com`のみ
 - Provider条件は`repository_owner`と`repository`を固定
-- PR subjectは`repo:moruku36/gcp-ai-terraform-validation:pull_request`
-- Apply subjectは`repo:moruku36/gcp-ai-terraform-validation:environment:terraform-production`
+- PR subjectは`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:pull_request`のexact形式
+- Apply subjectは`repo:<OWNER>@<OWNER_ID>/<REPOSITORY>@<REPOSITORY_ID>:environment:terraform-production`のexact形式
 - fork PRは同じbase repository subjectになり得るため、Workflowでも`head.repo.full_name == github.repository`を必須化
 - Service Account Key、Client Secret、長期Credentialは作成しない
 - PR SAはread-only custom roleとState Object Viewer
@@ -55,7 +55,7 @@ Repository Variable:
 
 - `GCP_ENVIRONMENT_ACTIVE`
 
-`terraform-production`はmain限定とし、cleanup前に`GCP_ENVIRONMENT_ACTIVE=false`へ変更してcloud jobのskipを確認する。
+`terraform-production`はmain限定とする。cleanup後は`GCP_ENVIRONMENT_ACTIVE=false`を維持し、bootstrapとStateを復元するまでcloud jobを起動しない。
 
 ## PR OIDC subject検証
 
@@ -96,3 +96,22 @@ TerraformのApply subjectだけをこのexact形式へ変更した。PR subject�
 - CI plan: No changes
 - CI apply: `0 added / 0 changed / 0 destroyed`
 - locking: `-lock=false`を使用せず、GCS backendの標準locking経路でplan/apply完了
+
+## Cleanup
+
+1. root/bootstrapのState listとNo changes planを確認
+2. GCS root Stateとbootstrap Stateを`.state-backups/`へ保存し、SHA-256を確認
+3. rootの25 destroyがdelete-onlyであることを確認してapply
+4. root State 0とworkload/Monitoringのactive 0を確認
+5. bootstrapの13 destroyがdelete-onlyであることを確認してapply
+6. State Bucket、WIF、Service Account、custom role、IAM bindingのactive 0をAPIで確認
+
+State Bucket削除後はroot backendへ接続できないため、root State 0の最終確認を先に行った。Project削除や既存resourceの一括削除は行っていない。
+
+cleanup後の誤再作成防止にはworkflow既存条件`vars.GCP_ENVIRONMENT_ACTIVE == 'true'`を使用する。GitHub側で今後不要となる削除候補は次のとおり。今回は値の削除は行わない。
+
+- Repository / Environment Secrets: `GCP_PROJECT_ID`、`GCP_WIF_PROVIDER`、`GCP_PR_SERVICE_ACCOUNT`、`GCP_APPLY_SERVICE_ACCOUNT`、`GCP_TF_STATE_BUCKET`
+- Repository Variable: `GCP_ENVIRONMENT_ACTIVE`
+- Environment: `terraform-production`
+
+再構築する場合はbootstrapを先にapplyし、GitHub設定を新しい実値へ更新してから有効化フラグを`true`にする。
